@@ -1,16 +1,13 @@
 ﻿using Blazor.Extensions;
 using Blazor.Extensions.Canvas.WebGL;
-using Blazor.Extensions.Canvas;
 using GLMatrixSharp;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using WebGLSharp;
-using Microsoft.AspNetCore.Components.Web;
 
 namespace WebGLCanvasExtension_Playground.Pages
 {
@@ -50,17 +47,36 @@ namespace WebGLCanvasExtension_Playground.Pages
             new List<string>() { "model", "projection", "ambientLight", "lightDirection", "diffuse" });
 
                 var geometry = Geometry.ParseObjFile(await Http.GetStringAsync("models/susan.obj"));
+#if WASRNDCOLOR 
                 var textureData = new int[40000];
                 Random rnd = new Random();
-                for (int i = 0; i < 40000; i = i + 4)
+                for (int i = 0; i < textureData.Length; i = i + 4)
                 {
                     //Colors between 0-255
-                    textureData[i] = rnd.Next(40, 90);
-                    textureData[i + 1] = 200;
-                    textureData[i + 2] = 15;
+                    textureData[i] = rnd.Next(40, 250);
+                    textureData[i + 1] = rnd.Next(40, 250);
+                    textureData[i + 2] = rnd.Next(40, 250);
                     textureData[i + 3] = 255;
                 }
                 var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData);
+#else
+                int dim = 8;
+                var textureData = new int[dim * dim * 4];
+                int i = 0;
+                for (int u = 0; u < dim; u++)
+                {
+                    for (int v = 0; v < dim; v++)
+                    {
+                        bool on = (v & 1) == 1 || (u & 1) == 0;
+                        textureData[i++] = 255;
+                        textureData[i++] = on ? 255 : 0;
+                        textureData[i++] = on ? 255 : 0;
+                        textureData[i++] = 255;
+                    }
+                }
+                var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData, dim, dim);
+#endif
+
                 //var initialPosition = Mat4.Translate(Mat4.Create(), new float[] { -0.0f, 0.0f, -6f });
                 _cylinderMesh = await Mesh.BuildAsync(gl, geometry, texture);
                 _light = new Light();

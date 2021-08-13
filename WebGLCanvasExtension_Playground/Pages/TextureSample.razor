@@ -1,0 +1,15 @@
+﻿@page "/texture"
+@using Blazor.Extensions.Canvas.WebGL
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using GLMatrixSharp
+@using System.IO
+@using System.Threading
+@using WebGLSharp
+@using System.Timers
+@implements IDisposable
+@inject HttpClient Http
+
+<h1>TextureSample</h1>
+<BECanvas Width="640" Height="640" @ref="_canvasReference"></BECanvas>
+<p>FPS: <strong>@_fpsDisplay</strong></p>

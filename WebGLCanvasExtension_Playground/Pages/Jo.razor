@@ -1,0 +1,16 @@
+﻿@page "/jo"
+@using Blazor.Extensions.Canvas.WebGL
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using GLMatrixSharp
+@using System.IO
+@using System.Threading
+@using WebGLSharp
+@using System.Timers
+@implements IDisposable
+@inject HttpClient Http
+
+<h1>Hello, 3D world!</h1>
+<p>Basic animation made with timer. The FPS are locked at 100. TODO: add a way to modify the rotation during the execution.</p>
+<BECanvas Width="640" Height="640" @ref="_canvasReference"></BECanvas>
+<p>FPS: <strong>@_fpsDisplay</strong></p>
