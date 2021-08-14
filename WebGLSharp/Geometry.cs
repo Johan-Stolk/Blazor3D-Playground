@@ -1,9 +1,7 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using System.Linq;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Numerics;
+using System.Text.RegularExpressions;
 
 namespace WebGLSharp
 {
@@ -63,8 +61,8 @@ namespace WebGLSharp
                     {
                         verticies.Add(new Vertex(
                             positions[int.Parse(match.Groups[i].Value) - 1],
-                            normals[int.Parse(match.Groups[i+2].Value) - 1],
-                            uvs[int.Parse(match.Groups[i+1].Value) - 1]
+                            normals[int.Parse(match.Groups[i + 2].Value) - 1],
+                            uvs[int.Parse(match.Groups[i + 1].Value) - 1]
                             ));
                     }
                     faces.Add(new Face(verticies));
@@ -76,7 +74,7 @@ namespace WebGLSharp
         {
             return _faces.Count * 3;
         }
-        internal float[] GetPositions()
+        public float[] GetPositions()
         {
             var res = new List<float>();
             foreach (var face in _faces)

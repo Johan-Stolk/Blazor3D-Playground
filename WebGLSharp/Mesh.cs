@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Blazor.Extensions.Canvas.WebGL;
+﻿using Blazor.Extensions.Canvas.WebGL;
 using GLMatrixSharp;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace WebGLSharp
 {
@@ -32,7 +27,7 @@ namespace WebGLSharp
         public async static Task<Mesh> BuildAsync(WebGLContext gl, Geometry geometry, Texture texture, float[] initialPosition = null)
         {
             int vertexCount = geometry.GetVertexCount();
-            return new Mesh( 
+            return new Mesh(
                 await VBO.BuildAsync(gl, vertexCount, geometry.GetPositions()),
                 await VBO.BuildAsync(gl, vertexCount, geometry.GetNormals()),
                 await VBO.BuildAsync(gl, vertexCount, geometry.GetUvs()),
@@ -56,7 +51,26 @@ namespace WebGLSharp
             await _normals.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("normal"));
             await _uvs.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("uv"));
             await _gl.UniformMatrixAsync(shaderProgram.Uniforms.GetValueOrDefault("model"), false, _position);
-            await _texture.UseAsync( shaderProgram.Uniforms.GetValueOrDefault("diffuse"), 0);
+            await _texture.UseAsync(shaderProgram.Uniforms.GetValueOrDefault("diffuse"), 0);
+            await _gl.DrawArraysAsync(Primitive.TRIANGLES, 0, _vertexCount);
+        }
+
+        public async Task AddDyna()
+        {
+
+        }
+
+        public async Task DrawAsync2(ShaderProgram shaderProgram, VBO _positions2, bool use)
+        {
+            //TODO: add attribute dictionary to the shader program
+            if (use)
+                await _positions2.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("position"));
+            else
+                await _positions.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("position"));
+            await _normals.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("normal"));
+            await _uvs.BindToAttributeAsync((uint)shaderProgram.Attributes.GetValueOrDefault("uv"));
+            await _gl.UniformMatrixAsync(shaderProgram.Uniforms.GetValueOrDefault("model"), false, _position);
+            await _texture.UseAsync(shaderProgram.Uniforms.GetValueOrDefault("diffuse"), 0);
             await _gl.DrawArraysAsync(Primitive.TRIANGLES, 0, _vertexCount);
         }
 

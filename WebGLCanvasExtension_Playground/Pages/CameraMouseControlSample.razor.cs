@@ -17,6 +17,7 @@ namespace WebGLCanvasExtension_Playground.Pages
 
         BECanvasComponent _canvasReference;
         ShaderProgram _shaderProgram;
+        private Random rnd;
         Mesh _cylinderMesh;
         Light _light;
 
@@ -28,7 +29,7 @@ namespace WebGLCanvasExtension_Playground.Pages
         {
             if (firstRender)
             {
-                var gl = await this._canvasReference.CreateWebGLAsync(new WebGLContextAttributes
+                gl = await this._canvasReference.CreateWebGLAsync(new WebGLContextAttributes
                 {
                     PreserveDrawingBuffer = true,
                     PowerPreference = WebGLContextAttributes.POWER_PREFERENCE_HIGH_PERFORMANCE
@@ -39,17 +40,16 @@ namespace WebGLCanvasExtension_Playground.Pages
                 await gl.EnableAsync(EnableCap.CULL_FACE);
                 await gl.FrontFaceAsync(FrontFaceDirection.CCW);
                 await gl.CullFaceAsync(Face.BACK);
-                _shaderProgram = await ShaderProgram.InitShaderProgram(
-            gl,
+                _shaderProgram = await ShaderProgram.InitShaderProgram(gl,
             await Http.GetStringAsync("shaders/basic.vert"),
             await Http.GetStringAsync("shaders/basic.frag"),
             new List<string>() { "position", "normal", "uv" },
             new List<string>() { "model", "projection", "ambientLight", "lightDirection", "diffuse" });
 
-                var geometry = Geometry.ParseObjFile(await Http.GetStringAsync("models/susan.obj"));
+                rnd = new Random();
+                geometry = Geometry.ParseObjFile(await Http.GetStringAsync("models/susan.obj"));
 #if WASRNDCOLOR 
                 var textureData = new int[40000];
-                Random rnd = new Random();
                 for (int i = 0; i < textureData.Length; i = i + 4)
                 {
                     //Colors between 0-255
@@ -74,9 +74,9 @@ namespace WebGLCanvasExtension_Playground.Pages
                         textureData[i++] = 255;
                     }
                 }
-                var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData, dim, dim);
 #endif
-
+                var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData, dim, dim);
+                await MakePos2(gl, rnd, geometry, 0);
                 //var initialPosition = Mat4.Translate(Mat4.Create(), new float[] { -0.0f, 0.0f, -6f });
                 _cylinderMesh = await Mesh.BuildAsync(gl, geometry, texture);
                 _light = new Light();
@@ -85,6 +85,18 @@ namespace WebGLCanvasExtension_Playground.Pages
             }
         }
 
+        private async Task MakePos2(WebGLContext gl, Random rnd, Geometry geometry, float factor)
+        {
+            float[] posar = geometry.GetPositions();
+            for (int j = 0; j < posar.Length; j++)
+                posar[j] += (float)Math.Cos(posar[j]) * factor;
+            pos2 = await VBO.BuildAsync(gl, posar.Length / 3, posar);
+        }
+
+        VBO pos2;
+        private Geometry geometry;
+        private WebGLContext gl;
+
         private async Task DrawSceneAsync()
         {
             await _shaderProgram.GlContext.ClearAsync(BufferBits.COLOR_BUFFER_BIT | BufferBits.DEPTH_BUFFER_BIT);
@@ -92,10 +104,15 @@ namespace WebGLCanvasExtension_Playground.Pages
             await _light.UseAsync(_shaderProgram);
             var projectionMatrix = Mat4.Perspective((float)(45 * Math.PI / 180), 1f, 0.1f, 100f);
             projectionMatrix = Mat4.Translate(projectionMatrix, new float[] { 0, 0, -6f });
-            projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationX, new float[3] { 1f, 0, 0f });
+            //projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationX, new float[3] { 1f, 0, 0f });
             projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationY, new float[3] { 0, 1f, 0f });
             await _shaderProgram.GlContext.UniformMatrixAsync(_shaderProgram.Uniforms.GetValueOrDefault("projection"), false, projectionMatrix);
-            await _cylinderMesh.DrawAsync(_shaderProgram);
+            if (_isDragging)
+            {
+                await _cylinderMesh.DrawAsync2(_shaderProgram, pos2, true);
+            }
+            else
+                await _cylinderMesh.DrawAsync(_shaderProgram);
         }
 
         private void MouseDown(MouseEventArgs e)
@@ -121,6 +138,7 @@ namespace WebGLCanvasExtension_Playground.Pages
                 var dy = factor * (y - _lastY);
                 _rotationX += dy;
                 _rotationY += dx;
+                await MakePos2(gl, rnd, geometry, (float)_rotationX);
                 await DrawSceneAsync();
             }
             _lastX = x;
