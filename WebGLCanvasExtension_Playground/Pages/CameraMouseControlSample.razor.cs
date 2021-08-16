@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using WebGLSharp;
+using WebGLSharp.YoaGames;
 
 namespace WebGLCanvasExtension_Playground.Pages
 {
@@ -47,8 +48,10 @@ namespace WebGLCanvasExtension_Playground.Pages
             new List<string>() { "model", "projection", "ambientLight", "lightDirection", "diffuse" });
 
                 rnd = new Random();
-                geometry = Geometry.ParseObjFile(await Http.GetStringAsync("models/susan.obj"));
-#if WASRNDCOLOR 
+                //geometry = Geometry.ParseObjFile(await Http.GetStringAsync("models/susan.obj"));
+
+                geometry = SpaceModels.cuirck().ToGeometry();
+#if WASRNDCOLOR  || true
                 var textureData = new int[40000];
                 for (int i = 0; i < textureData.Length; i = i + 4)
                 {
@@ -74,8 +77,8 @@ namespace WebGLCanvasExtension_Playground.Pages
                         textureData[i++] = 255;
                     }
                 }
-#endif
                 var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData, dim, dim);
+#endif
                 await MakePos2(gl, rnd, geometry, 0);
                 //var initialPosition = Mat4.Translate(Mat4.Create(), new float[] { -0.0f, 0.0f, -6f });
                 _cylinderMesh = await Mesh.BuildAsync(gl, geometry, texture);
@@ -104,7 +107,7 @@ namespace WebGLCanvasExtension_Playground.Pages
             await _light.UseAsync(_shaderProgram);
             var projectionMatrix = Mat4.Perspective((float)(45 * Math.PI / 180), 1f, 0.1f, 100f);
             projectionMatrix = Mat4.Translate(projectionMatrix, new float[] { 0, 0, -6f });
-            //projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationX, new float[3] { 1f, 0, 0f });
+            projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationX, new float[3] { 1f, 0, 0f });
             projectionMatrix = Mat4.Rotate(projectionMatrix, (float)_rotationY, new float[3] { 0, 1f, 0f });
             await _shaderProgram.GlContext.UniformMatrixAsync(_shaderProgram.Uniforms.GetValueOrDefault("projection"), false, projectionMatrix);
             if (_isDragging)
@@ -138,7 +141,7 @@ namespace WebGLCanvasExtension_Playground.Pages
                 var dy = factor * (y - _lastY);
                 _rotationX += dy;
                 _rotationY += dx;
-                await MakePos2(gl, rnd, geometry, (float)_rotationX);
+                // await MakePos2(gl, rnd, geometry, (float)_rotationX);
                 await DrawSceneAsync();
             }
             _lastX = x;

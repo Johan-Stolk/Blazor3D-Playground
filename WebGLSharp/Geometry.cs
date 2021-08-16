@@ -9,7 +9,7 @@ namespace WebGLSharp
     {
         List<Face> _faces;
 
-        private Geometry(List<Face> faces)
+        public Geometry(List<Face> faces)
         {
             _faces = faces;
         }
