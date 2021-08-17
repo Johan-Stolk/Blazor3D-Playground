@@ -61,8 +61,10 @@ namespace WebGLCanvasExtension_Playground.Pages
                     textureData[i + 2] = rnd.Next(40, 250);
                     textureData[i + 3] = 255;
                 }
-                var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData);
+                // var texture = await WebGLSharp.Texture.BuildAsync(gl, textureData);
+                var texture = await WebGLSharp.Texture.LoadUrl(gl, "https://localhost:5001/textures/cubetexture.png");
 #else
+https://github.com/BlazorExtensions/Canvas
                 int dim = 8;
                 var textureData = new int[dim * dim * 4];
                 int i = 0;
